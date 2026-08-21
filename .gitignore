@@ -1,0 +1,26 @@
+# Ansible
+.ansible/
+*.retry
+
+# Ansible Vault
+*.vault
+*.vault.yml
+*.vault.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
