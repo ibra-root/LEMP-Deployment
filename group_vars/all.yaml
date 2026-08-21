@@ -1,0 +1,16 @@
+# Usuario sudo (coherente con ansible.cfg)
+sudo_user: <usuario_sudo>
+
+# Rutas de la aplicación
+app_dir: /var/www/<nombre_sitio>
+nginx_conf_dir: /etc/nginx/sites-available
+nginx_enabled_dir: /etc/nginx/sites-enabled
+
+# Credenciales MariaDB (placeholder; rotar en producción)
+db_name: <nombre_bd>
+db_user: <usuario_bd>
+db_password: <password_bd>
+
+# Servidor PHP-FPM
+php_fpm_user: www-data
+php_fpm_group: www-data
