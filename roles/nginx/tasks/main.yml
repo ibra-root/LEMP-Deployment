@@ -1,0 +1,36 @@
+---
+# Tareas para la instalación y configuración de Nginx
+- name: Instalar servidor web Nginx
+  ansible.builtin.apt:
+    name: "{{ nginx_package_name }}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Deshabilitar el sitio default en sites-enabled
+  ansible.builtin.file:
+    path: "{{ nginx_enabled_dir }}/default"
+    state: absent
+  notify: reload nginx
+
+- name: Desplegar la configuración del Virtual Host de WordPress
+  ansible.builtin.template:
+    src: wordpress.conf.j2
+    dest: "{{ nginx_conf_dir }}/wordpress.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: reload nginx
+
+- name: Habilitar el Virtual Host de WordPress creando el enlace simbólico
+  ansible.builtin.file:
+    src: "{{ nginx_conf_dir }}/wordpress.conf"
+    dest: "{{ nginx_enabled_dir }}/wordpress.conf"
+    state: link
+  notify: reload nginx
+
+- name: Asegurar que el servicio Nginx está iniciado y habilitado
+  ansible.builtin.service:
+    name: "{{ nginx_service_name }}"
+    state: started
+    enabled: yes

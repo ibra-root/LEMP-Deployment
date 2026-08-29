@@ -1,0 +1,25 @@
+---
+# Variables por defecto para el rol wordpress
+wp_version: latest
+wp_download_url: "https://wordpress.org/latest.tar.gz"
+
+app_dir: /var/www/wordpress
+wp_owner: www-data
+wp_group: www-data
+
+# Base de datos
+db_name: wordpress_db
+db_user: wp_user
+db_password: wp_secure_password_123
+db_host: localhost
+wp_table_prefix: "wp_"
+
+# Claves de autenticación y sales de WordPress
+wp_auth_key: "generate-a-strong-secret-key-phrase-1"
+wp_secure_auth_key: "generate-a-strong-secret-key-phrase-2"
+wp_logged_in_key: "generate-a-strong-secret-key-phrase-3"
+wp_nonce_key: "generate-a-strong-secret-key-phrase-4"
+wp_auth_salt: "generate-a-strong-secret-key-phrase-5"
+wp_secure_auth_salt: "generate-a-strong-secret-key-phrase-6"
+wp_logged_in_salt: "generate-a-strong-secret-key-phrase-7"
+wp_nonce_salt: "generate-a-strong-secret-key-phrase-8"
