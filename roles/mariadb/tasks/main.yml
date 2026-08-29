@@ -1,0 +1,46 @@
+---
+# Tareas para la instalación y configuración de MariaDB
+- name: Actualizar caché apt e instalar MariaDB y dependencias
+  ansible.builtin.apt:
+    name: "{{ mariadb_packages }}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Asegurar que el servicio MariaDB está iniciado y habilitado
+  ansible.builtin.service:
+    name: "{{ mariadb_service_name }}"
+    state: started
+    enabled: yes
+
+- name: Eliminar usuarios anónimos de MariaDB
+  community.mysql.mysql_user:
+    name: ''
+    host_all: yes
+    state: absent
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  when: mariadb_remove_anonymous_users | default(true)
+
+- name: Eliminar la base de datos de test de MariaDB
+  community.mysql.mysql_db:
+    name: test
+    state: absent
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  when: mariadb_remove_test_database | default(true)
+
+- name: Crear la base de datos de WordPress
+  community.mysql.mysql_db:
+    name: "{{ db_name }}"
+    state: present
+    encoding: utf8mb4
+    collation: utf8mb4_unicode_ci
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+
+- name: Crear el usuario de base de datos para WordPress y asignar permisos
+  community.mysql.mysql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    priv: "{{ db_name }}.*:ALL"
+    host: "{{ db_host }}"
+    state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock

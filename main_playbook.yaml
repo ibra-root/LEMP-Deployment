@@ -1,0 +1,9 @@
+---
+- name: Despliegue de Pila LEMP y WordPress
+  hosts: nodo1
+  become: true
+  roles:
+    - role: mariadb
+    - role: php
+    - role: nginx
+    - role: wordpress

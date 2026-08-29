@@ -1,0 +1,31 @@
+---
+# Variables por defecto para el rol php
+php_version: "8.5"
+php_fpm_user: www-data
+php_fpm_group: www-data
+
+php_use_ppa: false
+php_ppa_repository: "ppa:ondrej/php"
+
+php_prerequisites:
+  - software-properties-common
+  - ca-certificates
+  - apt-transport-https
+  - lsb-release
+
+php_packages:
+  - "php{{ php_version }}-fpm"
+  - "php{{ php_version }}-cli"
+  - "php{{ php_version }}-common"
+  - "php{{ php_version }}-mysql"
+  - "php{{ php_version }}-curl"
+  - "php{{ php_version }}-gd"
+  - "php{{ php_version }}-intl"
+  - "php{{ php_version }}-mbstring"
+  - "php{{ php_version }}-soap"
+  - "php{{ php_version }}-xml"
+  - "php{{ php_version }}-zip"
+  - "php{{ php_version }}-imagick"
+  - "php{{ php_version }}-bcmath"
+
+php_fpm_service_name: "php{{ php_version }}-fpm"

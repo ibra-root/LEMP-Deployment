@@ -1,0 +1,13 @@
+---
+# Variables por defecto para el rol nginx
+nginx_package_name: nginx
+nginx_service_name: nginx
+
+nginx_conf_dir: /etc/nginx/sites-available
+nginx_enabled_dir: /etc/nginx/sites-enabled
+nginx_port: 80
+server_name: "_"
+app_dir: /var/www/wordpress
+
+php_version: "8.5"
+php_fpm_socket: "/run/php/php{{ php_version }}-fpm.sock"

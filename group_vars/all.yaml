@@ -1,0 +1,26 @@
+---
+# Configuración del usuario y privilegios
+sudo_user: root
+
+# Dominio y rutas web
+server_name: "_"
+app_dir: /var/www/wordpress
+
+# Configuración de Nginx
+nginx_conf_dir: /etc/nginx/sites-available
+nginx_enabled_dir: /etc/nginx/sites-enabled
+nginx_port: 80
+
+# Configuración de PHP
+php_version: "8.5"
+php_fpm_user: www-data
+php_fpm_group: www-data
+
+# Credenciales de Base de Datos (MariaDB)
+db_name: wordpress_db
+db_user: wp_user
+db_password: wp_secure_password_123
+db_host: localhost
+
+# Configuración de WordPress
+wp_table_prefix: "wp_"
