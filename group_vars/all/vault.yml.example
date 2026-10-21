@@ -1,0 +1,25 @@
+---
+# Secrets template. Do not edit or encrypt this file directly.
+#
+# Run:
+#   ./scripts/setup-vault.sh
+#
+# The script asks for the MariaDB password, generates the WordPress
+# keys/salts, and creates group_vars/all/vault.yml (encrypted) + .vault_pass.
+#
+# Manual alternative:
+#   cp group_vars/all/vault.yml.example group_vars/all/vault.yml
+#   # edit the values
+#   printf '%s\n' 'YOUR_PASSPHRASE' > .vault_pass && chmod 600 .vault_pass
+#   ansible-vault encrypt group_vars/all/vault.yml
+#
+# vault.yml is gitignored: it is specific to each installation.
+vault_db_password: "CHANGE_ME"
+vault_wp_auth_key: "CHANGE_ME"
+vault_wp_secure_auth_key: "CHANGE_ME"
+vault_wp_logged_in_key: "CHANGE_ME"
+vault_wp_nonce_key: "CHANGE_ME"
+vault_wp_auth_salt: "CHANGE_ME"
+vault_wp_secure_auth_salt: "CHANGE_ME"
+vault_wp_logged_in_salt: "CHANGE_ME"
+vault_wp_nonce_salt: "CHANGE_ME"

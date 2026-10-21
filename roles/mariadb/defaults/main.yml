@@ -1,18 +1,14 @@
 ---
-# Variables por defecto para el rol mariadb
+# MariaDB role internals.
+# db_name, db_user, db_host and db_password come from group_vars/all/.
+
 mariadb_packages:
   - mariadb-server
   - python3-pymysql
 
-# Configuración de servicio
+# Service
 mariadb_service_name: mariadb
 
-# Base de datos y usuario de la aplicación
-db_name: wordpress_db
-db_user: wp_user
-db_password: wp_secure_password_123
-db_host: localhost
-
-# Endurecimiento de seguridad
+# Hardening
 mariadb_remove_anonymous_users: true
 mariadb_remove_test_database: true

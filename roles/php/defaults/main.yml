@@ -1,8 +1,7 @@
 ---
-# Variables por defecto para el rol php
-php_version: "8.5"
-php_fpm_user: www-data
-php_fpm_group: www-data
+# PHP role internals.
+# php_version, php_fpm_user and php_fpm_group come from
+# group_vars/all/vars.yml.
 
 php_use_ppa: false
 php_ppa_repository: "ppa:ondrej/php"
