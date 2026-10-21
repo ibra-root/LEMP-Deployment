@@ -4,6 +4,30 @@ Automated, modular Ansible playbook for deploying a high-performance **LEMP Stac
 
 ---
 
+## 🗺️ Deployment Flow
+
+```mermaid
+flowchart TD
+    A([Clone repository]) --> B[make setup]
+    B --> C[Choose MariaDB password<br/>generate WordPress keys and salts]
+    C --> D[(vault.yml + .vault_pass)]
+    D -.->|decrypted at runtime| H
+    D --> E[Configure inventory<br/>server IP and SSH user]
+    E --> F[Deploy SSH key<br/>enable passwordless sudo]
+    F --> G[make ping]
+    G -->|pong| H[make deploy]
+    H --> I[MariaDB role<br/>database and wp_user]
+    I --> J[PHP-FPM role<br/>extensions and service]
+    J --> K[Nginx role<br/>virtual host and PHP socket]
+    K --> L[WordPress role<br/>download and wp-config.php]
+    L --> M([Open http://server-ip])
+    M --> N([Finish WordPress installer])
+    G -->|unreachable| O[Check inventory, SSH key and sudo]
+    O --> G
+```
+
+---
+
 ## 📋 Features
 
 - **MariaDB Role (`roles/mariadb`)**:
