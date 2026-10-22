@@ -106,7 +106,7 @@ LEMP-Deployment/
 ### Managed Target Node(s)
 - **Operating System**: Ubuntu 22.04 / 24.04 / 26.04 or Debian 11 / 12.
 - **SSH access** with a user that has `sudo` privileges.
-- *Recommended*: Passwordless sudo configured for the Ansible user (`user ALL=(ALL) NOPASSWD:ALL`) in `/etc/sudoers.d/ansible_user`.
+- *Recommended*: Passwordless sudo configured for the Ansible user (`<YOUR_USER> ALL=(ALL) NOPASSWD:ALL`) in `/etc/sudoers.d/ansible_user`.
 
 ---
 
@@ -160,25 +160,27 @@ ansible-vault encrypt group_vars/all/vault.yml
 ```yaml
 all:
   vars:
-    ansible_user: user
-    # ansible_ssh_private_key_file: ~/.ssh/id_ed25519  # if not the default key
+    ansible_user: <YOUR_USER>
+    ansible_ssh_private_key_file: ~/.ssh/<YOUR_KEY>   # e.g. id_ed25519
   hosts:
     nodo1:
-      ansible_host: 192.168.1.134
+      ansible_host: <YOUR_IP>
 ```
+
+Replace `<YOUR_USER>`, `<YOUR_IP>` and `<YOUR_KEY>` with your own values before continuing.
 
 Prepare the target node once:
 
 ```bash
 # Create a key if you don't have one yet
-ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
+ssh-keygen -t ed25519 -f ~/.ssh/YOUR_KEY
 
 # Copy it to the server
-ssh-copy-id -i ~/.ssh/id_ed25519.pub user@192.168.1.134
+ssh-copy-id -i ~/.ssh/YOUR_KEY.pub YOUR_USER@YOUR_IP
 
 # Allow passwordless privilege escalation
-ssh -t user@192.168.1.134 \
-  'echo "user ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/ansible_user && sudo chmod 0440 /etc/sudoers.d/ansible_user'
+ssh -t YOUR_USER@YOUR_IP \
+  'echo "YOUR_USER ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/ansible_user && sudo chmod 0440 /etc/sudoers.d/ansible_user'
 ```
 
 Verify that Ansible can connect without being asked for a password before running the playbook.
@@ -223,7 +225,7 @@ Deploy the full LEMP stack and WordPress with:
 ansible-playbook main_playbook.yaml
 ```
 
-Once completed, open your browser and navigate to `http://<TARGET_HOST_IP>` (e.g., `http://192.168.1.134`) to finish the WordPress web installer.
+Once completed, open your browser and navigate to `http://<YOUR_IP>` to finish the WordPress web installer.
 
 ---
 
@@ -267,7 +269,7 @@ Deployment-wide and cross-role variables (database names, web root, PHP version,
 - **Privilege Escalation on Modern Ubuntu (26.04+ / `sudo-rs`)**:
   Ubuntu 26.04 utilizes `sudo-rs` by default. To ensure reliable non-interactive privilege escalation, configure `NOPASSWD` for the Ansible user on the remote host:
   ```bash
-  echo "user ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/ansible_user
+  echo "YOUR_USER ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/ansible_user
   sudo chmod 0440 /etc/sudoers.d/ansible_user
   ```
 
