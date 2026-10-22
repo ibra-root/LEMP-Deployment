@@ -1,5 +1,5 @@
 ---
-# Handlers para el rol nginx
+# Nginx role handlers
 - name: reload nginx
   ansible.builtin.service:
     name: "{{ nginx_service_name }}"

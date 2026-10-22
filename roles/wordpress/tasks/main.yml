@@ -1,6 +1,6 @@
 ---
-# Tareas para la descarga, extracción y configuración de WordPress
-- name: Asegurar dependencias del sistema para descompresión
+# Download, extract, and configure WordPress
+- name: Ensure archive dependencies are installed
   ansible.builtin.apt:
     name:
       - tar
@@ -10,7 +10,7 @@
     update_cache: yes
     cache_valid_time: 3600
 
-- name: Crear el directorio de la aplicación WordPress
+- name: Create the WordPress application directory
   ansible.builtin.file:
     path: "{{ app_dir }}"
     state: directory
@@ -18,12 +18,12 @@
     group: "{{ wp_group }}"
     mode: '0755'
 
-- name: Comprobar si WordPress ya ha sido descargado y extraído
+- name: Check if WordPress is already downloaded and extracted
   ansible.builtin.stat:
     path: "{{ app_dir }}/wp-login.php"
   register: wp_installed
 
-- name: Descargar y extraer la última versión de WordPress
+- name: Download and extract the latest WordPress release
   ansible.builtin.unarchive:
     src: "{{ wp_download_url }}"
     dest: "{{ app_dir }}"
@@ -34,15 +34,16 @@
     group: "{{ wp_group }}"
   when: not wp_installed.stat.exists
 
-- name: Configurar wp-config.php desde plantilla Jinja2
+- name: Render wp-config.php from the Jinja2 template
   ansible.builtin.template:
     src: wp-config.php.j2
     dest: "{{ app_dir }}/wp-config.php"
     owner: "{{ wp_owner }}"
     group: "{{ wp_group }}"
     mode: '0640'
+  no_log: true
 
-- name: Asegurar propiedad y permisos recursivos en el directorio de WordPress
+- name: Ensure recursive ownership and permissions on the WordPress directory
   ansible.builtin.file:
     path: "{{ app_dir }}"
     owner: "{{ wp_owner }}"

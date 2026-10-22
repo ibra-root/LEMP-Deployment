@@ -1,5 +1,5 @@
 ---
-# Handlers para el rol php
+# PHP role handlers
 - name: restart php-fpm
   ansible.builtin.service:
     name: "{{ php_fpm_service_name }}"

@@ -1,5 +1,5 @@
 ---
-# Handlers para el rol mariadb
+# MariaDB role handlers
 - name: restart mariadb
   ansible.builtin.service:
     name: "{{ mariadb_service_name }}"

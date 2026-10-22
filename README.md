@@ -4,6 +4,30 @@ Automated, modular Ansible playbook for deploying a high-performance **LEMP Stac
 
 ---
 
+## 🗺️ Deployment Flow
+
+```mermaid
+flowchart TD
+    A([Clone repository]) --> B[make setup]
+    B --> C[Choose MariaDB password<br/>generate WordPress keys and salts]
+    C --> D[(vault.yml + .vault_pass)]
+    D -.->|decrypted at runtime| H
+    D --> E[Configure inventory<br/>server IP and SSH user]
+    E --> F[Deploy SSH key<br/>enable passwordless sudo]
+    F --> G[make ping]
+    G -->|pong| H[make deploy]
+    H --> I[MariaDB role<br/>database and wp_user]
+    I --> J[PHP-FPM role<br/>extensions and service]
+    J --> K[Nginx role<br/>virtual host and PHP socket]
+    K --> L[WordPress role<br/>download and wp-config.php]
+    L --> M([Open http://server-ip])
+    M --> N([Finish WordPress installer])
+    G -->|unreachable| O[Check inventory, SSH key and sudo]
+    O --> G
+```
+
+---
+
 ## 📋 Features
 
 - **MariaDB Role (`roles/mariadb`)**:
@@ -35,14 +59,20 @@ Automated, modular Ansible playbook for deploying a high-performance **LEMP Stac
 
 ```text
 LEMP-Deployment/
-├── ansible.cfg                 # Ansible configuration (inventory path, forks)
+├── ansible.cfg                 # Ansible configuration (inventory path, vault pass)
+├── Makefile                    # setup / ping / check / deploy shortcuts
 ├── group_vars/
-│   └── all.yaml                # Global variables shared across roles
+│   └── all/
+│       ├── vars.yml            # Global non-secret variables
+│       ├── vault.yml.example   # Template for local secrets
+│       └── vault.yml           # Encrypted secrets (local, gitignored)
 ├── host_vars/
 │   └── anyhost.yaml            # Host-specific overrides (optional)
 ├── inventory/
 │   └── hosts.yml               # Target servers inventory definition
 ├── main_playbook.yaml          # Main playbook execution entry point
+├── scripts/
+│   └── setup-vault.sh          # Creates the local encrypted vault
 ├── roles/
 │   ├── mariadb/
 │   │   ├── defaults/main.yml   # Default variables for MariaDB
@@ -72,10 +102,7 @@ LEMP-Deployment/
 ### Control Node (Your Machine)
 - **Ansible** (`ansible-core` >= 2.15)
 - **SSH Client**
-- **`sshpass`** (optional, required only if using password-based SSH authentication instead of SSH keys):
-  - *Arch / CachyOS*: `sudo pacman -S sshpass`
-  - *Ubuntu / Debian*: `sudo apt install sshpass`
-  - *Fedora / RHEL*: `sudo dnf install sshpass`
+- **SSH key pair** for the Ansible user (password-based SSH is not configured in the inventory)
 
 ### Managed Target Node(s)
 - **Operating System**: Ubuntu 22.04 / 24.04 / 26.04 or Debian 11 / 12.
@@ -86,21 +113,79 @@ LEMP-Deployment/
 
 ## 🚀 Quick Start
 
-### 1. Configure the Inventory
-Edit [`inventory/hosts.yml`](inventory/hosts.yml) with your target server IP, SSH username, and credentials:
+### 1. Clone and Generate Secrets
+```bash
+git clone https://github.com/ibra-root/LEMP-Deployment.git
+cd LEMP-Deployment
+make setup        # or ./scripts/setup-vault.sh
+```
+
+The script asks for two things:
+
+- The **MariaDB password** for `wp_user` (press Enter to generate a random one).
+- The **passphrase** that encrypts your local vault (press Enter to generate one).
+
+It then creates:
+
+- `group_vars/all/vault.yml` — encrypted secrets: database password and the eight WordPress authentication keys/salts.
+- `.vault_pass` — the vault passphrase, with mode `0600`.
+
+Both files are local and ignored by git: **never commit them**. The WordPress keys/salts are generated automatically; you only choose the database password (or let the script generate it).
+
+Manage the secrets later with:
+
+```bash
+make vault-edit   # ansible-vault edit group_vars/all/vault.yml
+make vault-view   # ansible-vault view group_vars/all/vault.yml
+```
+
+`ansible.cfg` points to `.vault_pass`, so `ansible` and `ansible-playbook` work without extra exports. If you prefer not to store the passphrase on disk, comment out `vault_password_file` in `ansible.cfg` and use `--ask-vault-pass`.
+
+Manual alternative without the script:
+
+```bash
+cp group_vars/all/vault.yml.example group_vars/all/vault.yml
+# edit the values in group_vars/all/vault.yml
+
+# create the local passphrase file (mode 0600)
+printf '%s\n' 'TU_PASSPHRASE' > .vault_pass
+chmod 600 .vault_pass
+
+# ansible.cfg already points to .vault_pass
+ansible-vault encrypt group_vars/all/vault.yml
+```
+
+### 2. Configure the Inventory
+[`inventory/hosts.yml`](inventory/hosts.yml) contains **no credentials**: authentication relies on SSH keys and passwordless `sudo`:
 
 ```yaml
 all:
+  vars:
+    ansible_user: user
+    # ansible_ssh_private_key_file: ~/.ssh/id_ed25519  # if not the default key
   hosts:
     nodo1:
       ansible_host: 192.168.1.134
-      ansible_user: user
-      ansible_password: your_ssh_password          # Or use SSH keys
-      ansible_become_password: your_sudo_password  # If sudo requires password
 ```
 
-### 2. Customize Application Variables
-Review and modify global variables in [`group_vars/all.yaml`](group_vars/all.yaml):
+Prepare the target node once:
+
+```bash
+# Create a key if you don't have one yet
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
+
+# Copy it to the server
+ssh-copy-id -i ~/.ssh/id_ed25519.pub user@192.168.1.134
+
+# Allow passwordless privilege escalation
+ssh -t user@192.168.1.134 \
+  'echo "user ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/ansible_user && sudo chmod 0440 /etc/sudoers.d/ansible_user'
+```
+
+Verify that Ansible can connect without being asked for a password before running the playbook.
+
+### 3. Customize Application Variables
+Review and modify non-secret global variables in [`group_vars/all/vars.yml`](group_vars/all/vars.yml):
 
 ```yaml
 # Domain and Web Root
@@ -118,32 +203,49 @@ php_fpm_group: www-data
 # MariaDB Credentials
 db_name: wordpress_db
 db_user: wp_user
-db_password: strong_database_password_here
+db_password: "{{ vault_db_password }}"   # actual value lives in vault.yml
 db_host: localhost
 
 # WordPress Table Prefix
 wp_table_prefix: "wp_"
 ```
 
-### 3. Verify Connection
+### 4. Verify Connection
 Test connectivity to your managed hosts:
 
 ```bash
-ansible all -i inventory/hosts.yml -m ping
+make ping
+# or: ansible all -m ping
 ```
 
-### 4. Run the Playbook
-Deploy the full LEMP stack and WordPress by executing:
+### 5. Run the Playbook
+Deploy the full LEMP stack and WordPress with:
 
 ```bash
-ansible-playbook main_playbook.yaml
+make deploy
+# or: ansible-playbook main_playbook.yaml
 ```
 
 Once completed, open your browser and navigate to `http://<TARGET_HOST_IP>` (e.g., `http://192.168.1.134`) to finish the WordPress web installer.
 
 ---
 
+## 🧰 Makefile Shortcuts
+
+| Command | Action |
+| :--- | :--- |
+| `make setup` | Generates `group_vars/all/vault.yml` and `.vault_pass`. |
+| `make ping` | Checks connectivity to the managed hosts. |
+| `make check` | Validates the playbook syntax. |
+| `make deploy` | Runs the full deployment. |
+| `make vault-edit` | Opens the encrypted secrets in `$EDITOR`. |
+| `make vault-view` | Prints the encrypted secrets. |
+
+---
+
 ## 🔧 Variables & Role Customization
+
+Deployment-wide and cross-role variables (database names, web root, PHP version, Nginx port, etc.) are defined once in [`group_vars/all/vars.yml`](group_vars/all/vars.yml). Role `defaults/main.yml` files only contain role-internal values (package lists, service names, internal paths), which can still be overridden from `group_vars` when needed. Secrets are never defined in role defaults.
 
 | Variable | Default Value | Description |
 | :--- | :--- | :--- |
@@ -154,9 +256,10 @@ Once completed, open your browser and navigate to `http://<TARGET_HOST_IP>` (e.g
 | `php_use_ppa` | `false` | Set `true` to enable Ondřej Surý PPA on supported Ubuntu versions. |
 | `db_name` | `wordpress_db` | Name of the MariaDB database for WordPress. |
 | `db_user` | `wp_user` | Database user created with permissions on `db_name`. |
-| `db_password` | `wp_secure_password_123` | Password for the database user. |
+| `db_password` | `vault_db_password` (encrypted) | Password for the database user. Defined in `group_vars/all/vault.yml`. |
 | `db_host` | `localhost` | Database host (defaults to local socket/connection). |
 | `wp_table_prefix`| `"wp_"` | Database table prefix for WordPress tables. |
+| `wp_auth_key`, `wp_*_salt`, ... | encrypted (`vault_wp_*`) | WordPress authentication keys and salts. Defined in `group_vars/all/vault.yml`. |
 
 ---
 
@@ -170,10 +273,13 @@ Once completed, open your browser and navigate to `http://<TARGET_HOST_IP>` (e.g
   ```
 
 - **SSH Keys Authentication**:
-  For maximum security and performance, avoid storing plain-text passwords in inventory files. Deploy your SSH public key to the remote host:
-  ```bash
-  ssh-copy-id user@<SERVER_IP>
-  ```
+  The inventory intentionally contains no passwords. Deploy your SSH public key and enable passwordless `sudo` as described in [Quick Start](#-quick-start). Do not add `ansible_password` or `ansible_become_password` back to the inventory.
+
+- **Rotating Secrets**:
+  Edit the values with `make vault-edit` (or `ansible-vault edit group_vars/all/vault.yml`) and re-run the playbook. Changing `vault_db_password` updates the MariaDB user password; rotating the WordPress keys/salts re-renders `wp-config.php` and invalidates existing login sessions. If a secret was ever committed or shared, rotate it — encrypting it afterwards does not remove it from Git history.
+
+- **Local Secret Files**:
+  `group_vars/all/vault.yml` and `.vault_pass` are created per installation and ignored by git. Run `git check-ignore -v group_vars/all/vault.yml .vault_pass` to confirm. Commit only `group_vars/all/vault.yml.example`. If the vault passphrase is lost, the encrypted file cannot be recovered.
 
 ---
 

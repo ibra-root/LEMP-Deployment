@@ -2,10 +2,12 @@
 .ansible/
 *.retry
 
-# Ansible Vault
-*.vault
-*.vault.yml
-*.vault.yaml
+# Local secrets (created by scripts/setup-vault.sh)
+# Never commit the vault or its passphrase.
+group_vars/all/vault.yml
+.vault_pass
+*.vault_pass
+vault-password*
 
 # Python
 __pycache__/

@@ -1,6 +1,6 @@
 ---
-# Tareas para la instalación y configuración de PHP y extensiones
-- name: Instalar paquetes prerrequisitos para repositorios PPA
+# Install and configure PHP and extensions
+- name: Install PPA prerequisites
   ansible.builtin.apt:
     name: "{{ php_prerequisites }}"
     state: present
@@ -8,21 +8,21 @@
     cache_valid_time: 3600
   when: php_use_ppa | default(false)
 
-- name: Añadir el repositorio PPA de Ondřej Surý para PHP
+- name: Add the Ondřej Surý PHP PPA
   ansible.builtin.apt_repository:
     repo: "{{ php_ppa_repository }}"
     state: present
     update_cache: yes
   when: php_use_ppa | default(false)
 
-- name: Instalar PHP-FPM y las extensiones requeridas para WordPress
+- name: Install PHP-FPM and required WordPress extensions
   ansible.builtin.apt:
     name: "{{ php_packages }}"
     state: present
     update_cache: yes
   notify: restart php-fpm
 
-- name: Asegurar que el servicio PHP-FPM está iniciado y habilitado
+- name: Ensure PHP-FPM is started and enabled
   ansible.builtin.service:
     name: "{{ php_fpm_service_name }}"
     state: started

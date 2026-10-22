@@ -1,5 +1,5 @@
 ---
-- name: Despliegue de Pila LEMP y WordPress
+- name: Deploy LEMP stack and WordPress
   hosts: nodo1
   become: true
   roles:
