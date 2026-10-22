@@ -118,5 +118,5 @@ echo "  - .vault_pass               (0600, gitignored)"
 echo
 echo "Next steps:"
 echo "  1. Set the server IP/user in inventory/hosts.yml."
-echo "  2. make ping    # ansible all -m ping"
-echo "  3. make deploy  # ansible-playbook main_playbook.yaml"
+echo "  2. ansible all -m ping                     # check connectivity"
+echo "  3. ansible-playbook main_playbook.yaml     # run the deployment"
