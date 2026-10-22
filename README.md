@@ -178,7 +178,7 @@ ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
 ssh-copy-id -i ~/.ssh/id_ed25519.pub user@192.168.1.134
 
 # Allow passwordless privilege escalation
-ssh user@192.168.1.134 \
+ssh -t user@192.168.1.134 \
   'echo "user ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/ansible_user && sudo chmod 0440 /etc/sudoers.d/ansible_user'
 ```
 
